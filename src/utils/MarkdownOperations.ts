@@ -5,11 +5,11 @@ export class MarkdownOperations {
     }
 
     let info = "";
-    // found header section in file
+    // found header section in yaml format in file
     if (content.startsWith("---")) {
       const headerPos = content.indexOf("---", 3);
       const header = content.substring(3, headerPos).trim();
-      const grps = header.match(/title:\s*\"?([\w\d\s]+)\"?/i);
+      const grps = header.match(/title:\s*\"?([\w\d\t ]+)\"?/i);
       info = grps ? grps[1] : "";
       console.log("Header Info", grps, info);
     }

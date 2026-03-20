@@ -1,19 +1,9 @@
-// Moved AsyncZettelViewTreeItem and ZettelViewTreeDataProvider to separate modules
-
 import { MarkdownTreeViewAsyncItem } from "./core/markdown-tree-view-async-Item";
 import { MarkdownTreeViewDataProvider } from "./core/markdown-tree-view-data-provider";
 import { ConfigurationHandler } from "./configuration/configuration-handler";
 import { commands, ExtensionContext, TextDocument, window, workspace } from "vscode";
 import { MarkdownTreeViewOutputChannel } from "./ui/markdown-tree-view-output-channel";
 import { LogLevel } from "./types/log-level";
-
-async function selectMarkdownTreeViewItem(
-  item: MarkdownTreeViewAsyncItem,
-  treeViewProvider: MarkdownTreeViewDataProvider,
-) {
-  await item.isReady; // Wait for the async operation to complete
-  treeViewProvider.onViewSelected(item);
-}
 
 export function activate(context: ExtensionContext): void {
   const workspaceRoot =
@@ -75,65 +65,11 @@ export function activate(context: ExtensionContext): void {
     );
 
     workspace.onDidOpenTextDocument((doc: TextDocument) => {
-      markdownViewTreeDataProvider.openDocument(doc.uri);
+      MarkdownTreeViewOutputChannel.Instance.appendLine(`Open Document ${doc.uri}`, LogLevel.Debug);
     });
 
     workspace.onDidSaveTextDocument((doc: TextDocument) => {
       markdownViewTreeDataProvider.saveDocument(doc.uri);
     });
-
-    //registerRenameCommand(markdownViewTreeDataProvider, workspaceRoot);
-    /*
-    context.subscriptions.push(
-      commands.registerCommand(
-        "zettelkasten.openZettel",
-        (fileUri: Uri, treeItem: MarkdownTreeViewAsyncItem) => {
-          // Open the file
-          commands.executeCommand("open", fileUri);
-
-          selectMarkdownTreeViewItem(treeItem, markdownViewTreeDataProvider);
-        },
-      ),
-    ); */
   }
 }
-
-/*
-function registerRenameCommand(provider: markdownTreeViewDataProvider, workspaceRoot: string) {
-  commands.registerCommand("zettelView.renameEntry", async (node) => {
-    // Prompt the user for the new name
-    const newID = await window.showInputBox({ prompt: "Enter the new ID" });
-    if (newID && node) {
-      // Validate the new ID against the regex
-      MyLogger.logMsg(`New name: ${newID}`);
-      if (!idRegex.idRegExp.test(newID)) {
-        window.showErrorMessage(
-          `The new ID ${newID} does not match ${idRegex.idRegExpStr}. Please try again.`,
-        );
-        return;
-      }
-
-      // Assume node.fsPath is the file path of the file to be renamed
-      const oldPath = node.fsPath;
-      //concatenate the new ID with the extension ".md"
-      const newName = `${newID}.md`;
-      const newPath = path.join(path.dirname(oldPath), newName);
-
-      try {
-        // Rename the file
-        await fs.promises.rename(oldPath, newPath);
-      } catch (error) {
-        MyLogger.logMsg(`Failed to rename file: ${error}`);
-      }
-
-      // Now find and replace all the links in the workspace
-      const oldID = path.basename(oldPath, ".md"); // Extract old ID from oldPath without '.md'
-
-      // Call replaceIncomingLinks function
-      await replaceIncomingIDs(oldID, newID, workspaceRoot);
-
-      // Refresh the tree view
-      provider.refresh();
-    }
-  });
-}*/

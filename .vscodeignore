@@ -10,3 +10,7 @@ src/**
 tsconfig.json
 vsc-extension-quickstart.md
 *.vsix
+.prettierrc
+.eslintignore
+.eslintrc.js
+esbuild.js

@@ -2,7 +2,6 @@ import {
   commands,
   Event,
   EventEmitter,
-  ExtensionContext,
   TreeDataProvider,
   TreeItem,
   TreeItemCollapsibleState,
@@ -10,8 +9,6 @@ import {
   window,
   workspace,
 } from "vscode";
-import * as fs from "fs";
-import * as path from "path";
 import { MarkdownTreeViewAsyncItem } from "./markdown-tree-view-async-Item";
 import { FsObjectTypes } from "../types/fs-object-types";
 import { FolderTree } from "../types/folder-tree";
@@ -19,6 +16,8 @@ import { Options } from "../types/options";
 import { ConfigurationHandler } from "../configuration/configuration-handler";
 import { MarkdownTreeViewOutputChannel } from "../ui/markdown-tree-view-output-channel";
 import { LogLevel } from "../types/log-level";
+import { readdirSync, statSync } from "fs";
+import { join } from "path";
 
 export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTreeViewAsyncItem> {
   private _onDidChangeTreeData: EventEmitter<MarkdownTreeViewAsyncItem | undefined> =
@@ -38,9 +37,8 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
   constructor(
     private readonly workspaceRoots: string[],
     private readonly configHandler: ConfigurationHandler,
-    private context: ExtensionContext,
   ) {
-    this.loadMappings();
+    //this.loadMappings();
     configHandler.onDidChangeConfiguration(() => {
       if (this.configHandler.configuration.ExpandTreeView.changed) {
         this.expanded = this.configHandler.configuration.ExpandTreeView.value;
@@ -48,20 +46,6 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
       }
     });
     this.expanded = this.configHandler.configuration.ExpandTreeView.value;
-  }
-
-  private loadMappings(): void {
-    const saved = this.context.workspaceState.get<Record<string, MarkdownTreeViewAsyncItem>>(
-      "documentToItemMap",
-      {},
-    );
-    this.documentToItemMap = new Map(Object.entries(saved));
-    console.log(`Restored ${this.documentToItemMap.size} document mappings`);
-  }
-
-  private async saveMappings(): Promise<void> {
-    const obj = Object.fromEntries(this.documentToItemMap);
-    await this.context.workspaceState.update("documentToItemMap", obj);
   }
 
   public updateContextResources() {
@@ -87,27 +71,20 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
     this._onDidChangeTreeData.fire(markdownTreeViewItem);
   }
 
-  async openDocument(item: MarkdownTreeViewAsyncItem | Uri) {
-    if (item instanceof Uri) {
-      // this.documentToItemMap.set(uri.toString(), item);
-    } else {
-      const uri = item.resourceUri; // or however you get the URI from your item
+  async openDocument(item: MarkdownTreeViewAsyncItem) {
+    const uri = item.resourceUri; // or however you get the URI from your item
 
-      if (uri) {
-        // Store the mapping
-        this.documentToItemMap.set(uri.toString(), item);
-
-        // Persist to workspace state
-        await this.saveMappings();
-
-        // Open the document
-        const document = await workspace.openTextDocument(uri);
-        await window.showTextDocument(document);
-      }
+    if (uri) {
+      // Store the mapping
+      this.documentToItemMap.set(uri.toString(), item);
+      // Open the document
+      const document = await workspace.openTextDocument(uri);
+      await window.showTextDocument(document);
     }
   }
 
   async saveDocument(file: Uri) {
+    MarkdownTreeViewOutputChannel.Instance.appendLine(`Save Document ${file}`, LogLevel.Debug);
     const item = this.documentToItemMap.get(file.toString());
     if (item) {
       await item.getItemInformation();
@@ -186,6 +163,11 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
             arguments: [this],
           },
         );
+        MarkdownTreeViewOutputChannel.Instance.appendLine(
+          `Add Item to Tree: ${fileItem.label} - ${fileItem.resourceUri}`,
+          LogLevel.Debug,
+        );
+        this.documentToItemMap.set(fileItem.resourceUri.toString(), fileItem);
         return fileItem;
       });
     const itemsFlat = [...folders, ...files];
@@ -195,12 +177,12 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
 
   async walkDir(root: string, options?: Options) {
     const o = options ?? { recursive: false };
-    const fsObjects = await fs.promises.readdir(root);
+    const fsObjects = readdirSync(root);
     let files: FolderTree = { dir: root, folders: [], files: [] };
 
     for (const fsObject of fsObjects) {
-      const fso = path.join(root, fsObject);
-      if (fs.statSync(fso).isDirectory() && fsObject !== ".git") {
+      const fso = join(root, fsObject);
+      if (statSync(fso).isDirectory() && fsObject !== ".git") {
         if (o.recursive === true) {
           files.folders.push(await this.walkDir(fso, o));
         } else {

@@ -1,4 +1,10 @@
-# markdown-treeview
-VisualStudioCode extension to show a tree of markdown files, named by the first header or the header title.
+# Markdown TreeView
 
-This extension creates a new Tree Viewer. It shows all Markdown files within the workspace folder(s). Instead of the filenames the value of the first H1 header entry is shown.
+This extension is used to show a tree of markdown files, named by the first header or frontmatter
+title entry.
+
+## Feature
+
+This extension creates a new Tree Viewer. It shows all Markdown files within the workspace
+folder(s). Instead of the real filenames the value of the first # header entry or if it exists, a
+frontmatter title entry is used.

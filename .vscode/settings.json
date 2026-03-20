@@ -16,4 +16,5 @@
         "markdown": false,
         "scminput": false
     },
+    "editor.formatOnSave": true,
 }

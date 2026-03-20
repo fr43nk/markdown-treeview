@@ -3,6 +3,7 @@
   "configurations": [
     {
       "name": "Run Extension",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
       "type": "extensionHost",
       "request": "launch",
       "args": [

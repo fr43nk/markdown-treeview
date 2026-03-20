@@ -1,153 +1,154 @@
 {
-	"name": "markdown-treeview",
-	"displayName": "Markdown TreeView",
-	"description": "A TreeViewer for markdown files using their header title or first H1 as the filename",
-	"version": "0.1.0",
-	"publisher": "Fr43nk",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/fr43nk/markdown-treeview"
-	},
-	"engines": {
-		"vscode": "^1.96.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onLanguage:markdown"
-	],
-	"main": "./dist/extension.js",
-	"contributes": {
-		"views": {
-			"explorer": [
-				{
-					"id": "markdownTreeView",
-					"name": "Markdown TreeView",
-					"icon": "media/dep.svg",
-					"contextualTitle": "Markdown View"
-				}
-			]
-		},
-		"menus": {
-			"view/title": [
-				{
-					"command": "markdownTreeView.refreshTree",
-					"when": "view == markdownTreeView",
-					"group": "navigation"
-				},
-				{
-					"command": "markdownTreeView.collapseNodes",
-					"when": "view == markdownTreeView && markdownTreeView:Expanded",
-					"group": "navigation"
-				},
-				{
-					"command": "markdownTreeView.expandNodes",
-					"when": "view == markdownTreeView && !markdownTreeView:Expanded",
-					"group": "navigation"
-				}
-			],
-			"explorer/context": [],
-			"view": [
-				{
-					"command": "markdownTreeView.refreshTreeItem",
-					"when": "view===markdownTreeView && viewItem===markdownTreeViewItem",
-					"group": "inline@1"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "markdownTreeView.openTreeViewItem",
-					"when": "view===markdownTreeView",
-					"group": "10"
-				},
-				{
-					"command": "markdownTreeView.refreshTreeItem",
-					"when": "view===markdownTreeView",
-					"group": "100"
-				}
-			]
-		},
-		"commands": [
-			{
-				"command": "markdownTreeView.refreshTree",
-				"title": "Refresh Tree",
-				"icon": "$(refresh)"
-			},
-			{
-				"command": "markdownTreeView.openTreeViewItem",
-				"title": "Open TreeViewItem",
-				"icon": "$(open-preview)"
-			},
-			{
-				"command": "markdownTreeView.refreshTreeItem",
-				"title": "Refresh Tree",
-				"icon": "$(refresh)"
-			},
-			{
-				"command": "markdownTreeView.collapseNodes",
-				"title": "Collapse all tree nodes",
-				"icon": "$(collapse-all)"
-			},
-			{
-				"command": "markdownTreeView.expandNodes",
-				"title": "Expand all tree nodes",
-				"icon": "$(expand-all)"
-			}
-		],
-		"configuration": {
-			"title": "Markdown TreeView",
-			"properties": {
-				"markdownTreeView.expandTreeView": {
-					"type": "boolean",
-					"default": true,
-					"order": 1,
-					"description": "Expand the tree nodes on startup"
-				},
-				"markdownTreeView.logLevel": {
-					"type": "number",
-					"default": 0,
-					"markdownDescription": "Set the log level for messages in the output window.",
-					"order": 2,
-					"title": "Log Level",
-					"enumItemLabels": [
-						"None",
-						"Critical",
-						"Error",
-						"Warning",
-						"Information",
-						"Debug",
-						"Trace"
-					],
-					"enum": [
-						0,
-						1,
-						2,
-						3,
-						4,
-						5,
-						6
-					]
-				}
-			}
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run package",
-		"compile": "node ./esbuild.js --watch",
-		"package": "node ./esbuild.js --production",
-		"watch": "node ./esbuild.js --watch"
-	},
-	"devDependencies": {
-		"@types/vscode": "^1.96.0",
-		"@typescript-eslint/parser": "^8.57.1",
-		"@typescript-eslint/eslint-plugin": "^8.57.1",
-		"esbuild": "^0.27.4",
-		"eslint": "^10.0.3",
-		"typescript": "^5.1.3"
-	},
-	"dependencies": {
-		"vsce": "^2.15.0"
-	}
+  "name": "markdown-treeview",
+  "displayName": "Markdown TreeView",
+  "description": "A TreeViewer for markdown files using their header title or first H1 as the filename",
+  "version": "0.1.0",
+  "publisher": "Fr43nk",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fr43nk/markdown-treeview"
+  },
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "markdownTreeView",
+          "name": "Markdown TreeView",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Markdown View"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "markdownTreeView.refreshTree",
+          "when": "view == markdownTreeView",
+          "group": "navigation"
+        },
+        {
+          "command": "markdownTreeView.collapseNodes",
+          "when": "view == markdownTreeView && markdownTreeView:Expanded",
+          "group": "navigation"
+        },
+        {
+          "command": "markdownTreeView.expandNodes",
+          "when": "view == markdownTreeView && !markdownTreeView:Expanded",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [],
+      "view": [
+        {
+          "command": "markdownTreeView.refreshTreeItem",
+          "when": "view===markdownTreeView && viewItem===markdownTreeViewItem",
+          "group": "inline@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "markdownTreeView.openTreeViewItem",
+          "when": "view===markdownTreeView",
+          "group": "10"
+        },
+        {
+          "command": "markdownTreeView.refreshTreeItem",
+          "when": "view===markdownTreeView",
+          "group": "100"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "markdownTreeView.refreshTree",
+        "title": "Refresh Tree",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "markdownTreeView.openTreeViewItem",
+        "title": "Open TreeViewItem",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "markdownTreeView.refreshTreeItem",
+        "title": "Refresh Tree",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "markdownTreeView.collapseNodes",
+        "title": "Collapse all tree nodes",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "markdownTreeView.expandNodes",
+        "title": "Expand all tree nodes",
+        "icon": "$(expand-all)"
+      }
+    ],
+    "configuration": {
+      "title": "Markdown TreeView",
+      "properties": {
+        "markdownTreeView.expandTreeView": {
+          "type": "boolean",
+          "default": true,
+          "order": 1,
+          "description": "Expand the tree nodes on startup"
+        },
+        "markdownTreeView.logLevel": {
+          "type": "number",
+          "default": 0,
+          "markdownDescription": "Set the log level for messages in the output window.",
+          "order": 2,
+          "title": "Log Level",
+          "enumItemLabels": [
+            "None",
+            "Critical",
+            "Error",
+            "Warning",
+            "Information",
+            "Debug",
+            "Trace"
+          ],
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "node ./esbuild.js --watch",
+    "package": "node ./esbuild.js --production",
+    "watch": "node ./esbuild.js --watch"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
+    "esbuild": "^0.27.4",
+    "eslint": "^10.0.3",
+    "typescript": "^5.1.3"
+  },
+  "dependencies": {
+    "@types/node": "^25.5.0",
+    "vsce": "^2.15.0"
+  }
 }

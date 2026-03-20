@@ -1,5 +1,6 @@
 import { promises } from "fs";
 import { MarkdownOperations } from "./MarkdownOperations";
+import path = require("path");
 
 export class FileOperations {
   public static async getTitleFromFile(file: string) {
@@ -18,7 +19,7 @@ export class FileOperations {
     if (name === "") {
       name = MarkdownOperations.extractFirstTitle(content);
       if (name === "") {
-        return file;
+        return path.basename(file);
       }
     }
     return name;
