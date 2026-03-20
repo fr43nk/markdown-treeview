@@ -1,5 +1,10 @@
 # Changes
 
+## Version 1.0.1
+
+- Added media files for marketplace and readme
+- fixed minor bug in frontmatter detection
+
 ## Version 0.1.0
 
 - Tree viewer panel for markdown files in the current workspace
