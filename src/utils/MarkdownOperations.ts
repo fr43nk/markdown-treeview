@@ -8,7 +8,7 @@ export class MarkdownOperations {
     // found header section in yaml format in file
     if (content.startsWith("---")) {
       const headerPos = content.indexOf("---", 3);
-      const header = content.substring(3, headerPos).trim();
+      const header = content.substring(3, headerPos);
       const grps = header.match(/title:\s*\"?([^\n]+)\"?\n/i);
       info = grps ? grps[1] : "";
       console.log("Header Info", grps, info);

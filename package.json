@@ -2,12 +2,20 @@
   "name": "markdown-treeview",
   "displayName": "Markdown TreeView",
   "description": "A TreeViewer for markdown files using their header title or first H1 as the filename",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "Fr43nk",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/fr43nk/markdown-treeview"
+  },
+  "homepage": "https://github.com/fr43nk/markdown-treeview",
+  "bugs": {
+    "url": "https://github.com/fr43nk/markdown-treeview/issues"
+  },
+  "icon": "media/program-icon.png",
+  "galleryBanner": {
+    "color": "#DDFBFB"
   },
   "engines": {
     "vscode": "^1.100.0"
