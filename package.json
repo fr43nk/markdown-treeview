@@ -2,7 +2,7 @@
   "name": "markdown-treeview",
   "displayName": "Markdown TreeView",
   "description": "A TreeViewer for markdown files using their header title or first H1 as the filename",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "Fr43nk",
   "license": "MIT",
   "repository": {
