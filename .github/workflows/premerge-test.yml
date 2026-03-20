@@ -23,3 +23,10 @@ jobs:
         if: runner.os == 'Linux'
       - run: npm test
         if: runner.os != 'Linux'
+
+  premerge-test:
+    name: Premerge Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - run: echo "All matrix jobs finished"
