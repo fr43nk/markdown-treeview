@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { promises as fsPromises, mkdtempSync, writeFileSync, mkdirSync, rmSync } from "fs";
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -18,6 +18,18 @@ vi.mock("vscode", () => {
     Expanded: 1,
     Collapsed: 2,
     None: 0,
+  };
+  const LogLevel = {
+    Off: 0,
+    Error: 1,
+    Warning: 2,
+    Info: 3,
+    Debug: 4,
+  };
+  const FileType = {
+    File: 1,
+    Directory: 2,
+    SymbolicLink: 64,
   };
 
   const Uri = {
@@ -58,6 +70,8 @@ vi.mock("vscode", () => {
     commands,
     window,
     workspace,
+    LogLevel,
+    FileType,
     EventEmitter,
     OutputChannel,
   };
