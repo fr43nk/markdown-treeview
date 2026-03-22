@@ -1,10 +1,9 @@
-import { OutputChannel, window } from "vscode";
-import { LogLevel } from "../types/log-level";
+import { LogLevel, OutputChannel, window } from "vscode";
 
 export class MarkdownTreeViewOutputChannel implements OutputChannel {
   private static instance: MarkdownTreeViewOutputChannel | null = null;
   name: string;
-  debug: LogLevel = LogLevel.None;
+  debug: LogLevel = LogLevel.Off;
 
   private constructor(private outputChannelBase: OutputChannel) {
     this.name = outputChannelBase.name;
@@ -20,15 +19,20 @@ export class MarkdownTreeViewOutputChannel implements OutputChannel {
   }
 
   append(value: string, level?: LogLevel): void {
-    if (level !== undefined && this.debug >= level) {
-      this.outputChannelBase.append(value);
+    if (this.debug > LogLevel.Off) {
+      if (level !== undefined && this.debug >= level) {
+        this.outputChannelBase.append(value);
+      }
     }
   }
   appendLine(value: string, level?: LogLevel): void {
-    if (level !== undefined && this.debug > level) {
-      this.outputChannelBase.appendLine(`[${this.getTimestamp()}] ${value}`);
+    if (this.debug > LogLevel.Off) {
+      if (level !== undefined && this.debug <= level) {
+        this.outputChannelBase.appendLine(`[${this.getTimestamp()}] ${value}`);
+      }
     }
   }
+
   replace(value: string): void {
     if (this.debug) {
       this.outputChannelBase.replace(value);
@@ -55,11 +59,11 @@ export class MarkdownTreeViewOutputChannel implements OutputChannel {
     return `${d.getFullYear()}-${_m}-${_d} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
   }
 
-  set logLevel(value: LogLevel) {
+  set LogLevel(value: LogLevel) {
     this.debug = value;
   }
 
-  get logLevel(): LogLevel {
+  get LogLevel(): LogLevel {
     return this.debug;
   }
 }

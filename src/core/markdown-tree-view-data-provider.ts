@@ -8,31 +8,35 @@ import {
   Uri,
   window,
   workspace,
+  LogLevel,
+  FileType,
 } from "vscode";
-import { MarkdownTreeViewAsyncItem } from "./markdown-tree-view-async-Item";
-import { FsObjectTypes } from "../types/fs-object-types";
+import { MarkdownTreeViewItem } from "./markdown-tree-view-Item";
 import { FolderTree } from "../types/folder-tree";
 import { Options } from "../types/options";
 import { ConfigurationHandler } from "../configuration/configuration-handler";
 import { MarkdownTreeViewOutputChannel } from "../ui/markdown-tree-view-output-channel";
-import { LogLevel } from "../types/log-level";
 import { readdirSync, statSync } from "fs";
 import { join } from "path";
 
-export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTreeViewAsyncItem> {
-  private _onDidChangeTreeData: EventEmitter<MarkdownTreeViewAsyncItem | undefined> =
-    new EventEmitter<MarkdownTreeViewAsyncItem | undefined>();
-  onDidChangeTreeData: Event<MarkdownTreeViewAsyncItem | undefined> =
-    this._onDidChangeTreeData.event;
+export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTreeViewItem> {
+  private _onDidChangeTreeData: EventEmitter<MarkdownTreeViewItem | undefined> = new EventEmitter<
+    MarkdownTreeViewItem | undefined
+  >();
+  onDidChangeTreeData: Event<MarkdownTreeViewItem | undefined> = this._onDidChangeTreeData.event;
 
-  private _onDidSelectTreeItem: EventEmitter<MarkdownTreeViewAsyncItem> =
-    new EventEmitter<MarkdownTreeViewAsyncItem>();
-  onDidSelectTreeItem: Event<MarkdownTreeViewAsyncItem> = this._onDidSelectTreeItem.event;
+  private _onDidSelectTreeItem: EventEmitter<MarkdownTreeViewItem> =
+    new EventEmitter<MarkdownTreeViewItem>();
+  onDidSelectTreeItem: Event<MarkdownTreeViewItem> = this._onDidSelectTreeItem.event;
 
+  private itemTree: MarkdownTreeViewItem[] = [];
   // map open document to treeitem
-  private documentToItemMap: Map<string, MarkdownTreeViewAsyncItem> = new Map();
+  private documentToItemMap: Map<string, MarkdownTreeViewItem> = new Map();
 
   private expanded = true;
+
+  public itemsReady!: Promise<boolean>;
+  private itemsReadyResolve: ((v: boolean) => void) | undefined;
 
   constructor(
     private readonly workspaceRoots: string[],
@@ -46,32 +50,42 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
       }
     });
     this.expanded = this.configHandler.configuration.ExpandTreeView.value;
+    // initialize itemsReady as a pending promise; will be resolved when items loaded
+    this.createItemsReady();
+  }
+
+  private createItemsReady() {
+    this.itemsReady = new Promise<boolean>((resolve) => {
+      this.itemsReadyResolve = resolve;
+    });
   }
 
   public updateContextResources() {
     commands.executeCommand("setContext", "markdownTreeView:Expanded", this.Expanded);
   }
 
-  onViewSelected(markdownTreeViewItem: MarkdownTreeViewAsyncItem): void {
+  onViewSelected(markdownTreeViewItem: MarkdownTreeViewItem): void {
     markdownTreeViewItem.isReady.then(() => {
       this.refresh(markdownTreeViewItem); // Trigger a refresh of the tree view to update the labels
     });
-    if (markdownTreeViewItem.type === FsObjectTypes.Directory) {
+    if (markdownTreeViewItem.type === FileType.Directory) {
       markdownTreeViewItem.collapsibleState =
         markdownTreeViewItem.collapsibleState === TreeItemCollapsibleState.Collapsed
           ? TreeItemCollapsibleState.Expanded
           : TreeItemCollapsibleState.Collapsed;
     }
-
     this._onDidSelectTreeItem.fire(markdownTreeViewItem);
   }
 
-  refresh(markdownTreeViewItem?: MarkdownTreeViewAsyncItem): void {
+  refresh(markdownTreeViewItem?: MarkdownTreeViewItem): void {
     MarkdownTreeViewOutputChannel.Instance.appendLine("Refresh in Provider", LogLevel.Debug);
+    if (markdownTreeViewItem === undefined) {
+      //this.createItemsReady(); // reset itemsReady for the next load
+    }
     this._onDidChangeTreeData.fire(markdownTreeViewItem);
   }
 
-  async openDocument(item: MarkdownTreeViewAsyncItem) {
+  async openDocument(item: MarkdownTreeViewItem) {
     const uri = item.resourceUri; // or however you get the URI from your item
 
     if (uri) {
@@ -92,9 +106,13 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
     }
   }
 
-  async closeDocument(item: MarkdownTreeViewAsyncItem) {}
+  async closeDocument(item: MarkdownTreeViewItem) {}
 
-  getTreeItem(markdownTreeViewItem: MarkdownTreeViewAsyncItem): TreeItem {
+  getItemFromUri(uri: Uri): MarkdownTreeViewItem | undefined {
+    return this.documentToItemMap.get(uri.toString());
+  }
+
+  getTreeItem(markdownTreeViewItem: MarkdownTreeViewItem): TreeItem {
     MarkdownTreeViewOutputChannel.Instance.appendLine(
       `getTreeItem in Provider - ${markdownTreeViewItem.pathname}`,
       LogLevel.Debug,
@@ -102,9 +120,17 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
     return markdownTreeViewItem;
   }
 
-  async getChildren(
-    markdownTreeViewItem?: MarkdownTreeViewAsyncItem,
-  ): Promise<MarkdownTreeViewAsyncItem[]> {
+  async getParent(
+    markdownTreeViewItem: MarkdownTreeViewItem,
+  ): Promise<MarkdownTreeViewItem | null> {
+    MarkdownTreeViewOutputChannel.Instance.appendLine(
+      `getParent in Provider - ${markdownTreeViewItem.pathname}`,
+      LogLevel.Debug,
+    );
+    return markdownTreeViewItem.parent ?? null;
+  }
+
+  async getChildren(markdownTreeViewItem?: MarkdownTreeViewItem): Promise<MarkdownTreeViewItem[]> {
     MarkdownTreeViewOutputChannel.Instance.appendLine(
       `getChildren in Provider - ${markdownTreeViewItem?.pathname}`,
       LogLevel.Debug,
@@ -114,18 +140,18 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
       window.showInformationMessage("No markdown files found in your workspace");
       return [];
     }
-    if (markdownTreeViewItem && markdownTreeViewItem.type == FsObjectTypes.Directory) {
+    if (markdownTreeViewItem && markdownTreeViewItem.type == FileType.Directory) {
       MarkdownTreeViewOutputChannel.Instance.appendLine(
         `getChildren in Provider - Directory getting listed- ${markdownTreeViewItem?.pathname}`,
         LogLevel.Debug,
       );
-      return await this.getItems(markdownTreeViewItem.pathname);
+      return markdownTreeViewItem.childNodes ?? [];
     }
-    if (markdownTreeViewItem && markdownTreeViewItem.type == FsObjectTypes.File) {
+    if (markdownTreeViewItem && markdownTreeViewItem.type == FileType.File) {
       return [];
     }
 
-    let readyItems: MarkdownTreeViewAsyncItem[] = [];
+    let readyItems: MarkdownTreeViewItem[] = [];
     for (let f of this.workspaceRoots) {
       const items = await this.getItems(f);
       readyItems = [...readyItems, ...items];
@@ -134,28 +160,40 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
         LogLevel.Debug,
       );
     }
+    this.itemTree = [...readyItems];
+    if (this.itemsReadyResolve) {
+      this.itemsReadyResolve(true);
+      this.itemsReadyResolve = undefined; // reset the resolver for future refreshes
+    }
     return readyItems;
   }
 
-  async getItems(basePath: string) {
-    const fso = await this.walkDir(basePath);
-    const folders = fso.folders.map((folder: FolderTree) => {
-      return new MarkdownTreeViewAsyncItem(
-        folder.dir,
-        Uri.file(folder.dir),
-        this.Expanded,
-        FsObjectTypes.Directory,
-      );
-    });
+  async getItems(path: string, item?: MarkdownTreeViewItem) {
+    const fso = await this.walkDir(item?.pathname || path);
+    const folders = [];
 
-    const files = fso.files
-      .filter((file) => file.endsWith(".md"))
-      .map((file: string) => {
-        const fileItem = new MarkdownTreeViewAsyncItem(
-          file,
-          Uri.file(file),
+    for (const _folder of fso.folders) {
+      const _item = new MarkdownTreeViewItem(
+        _folder.dir,
+        Uri.file(_folder.dir),
+        item ?? null,
+        this.Expanded,
+        FileType.Directory,
+      );
+      const childs = await this.getItems(_folder.dir, _item);
+      _item.childNodes = childs;
+      folders.push(_item);
+    }
+
+    const files = [];
+    for (const _file of fso.files) {
+      if (_file.endsWith(".md")) {
+        const fileItem = new MarkdownTreeViewItem(
+          _file,
+          Uri.file(_file),
+          item ?? null,
           this.Expanded,
-          FsObjectTypes.File,
+          FileType.File,
           [],
           {
             command: "markdownTreeView.openTreeViewItem",
@@ -168,8 +206,9 @@ export class MarkdownTreeViewDataProvider implements TreeDataProvider<MarkdownTr
           LogLevel.Debug,
         );
         this.documentToItemMap.set(fileItem.resourceUri.toString(), fileItem);
-        return fileItem;
-      });
+        files.push(fileItem);
+      }
+    }
     const itemsFlat = [...folders, ...files];
     const readyItems = await Promise.all(itemsFlat.map((item) => item.isReady));
     return readyItems;
