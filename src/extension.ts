@@ -1,9 +1,17 @@
-import { MarkdownTreeViewAsyncItem } from "./core/markdown-tree-view-async-Item";
+import { MarkdownTreeViewItem } from "./core/markdown-tree-view-Item";
 import { MarkdownTreeViewDataProvider } from "./core/markdown-tree-view-data-provider";
 import { ConfigurationHandler } from "./configuration/configuration-handler";
-import { commands, ExtensionContext, TextDocument, window, workspace } from "vscode";
+import {
+  LogLevel,
+  commands,
+  ExtensionContext,
+  TextDocument,
+  window,
+  workspace,
+  FileType,
+} from "vscode";
 import { MarkdownTreeViewOutputChannel } from "./ui/markdown-tree-view-output-channel";
-import { LogLevel } from "./types/log-level";
+import { MarkdownTreeView } from "./core/markdown-tree-view";
 
 export function activate(context: ExtensionContext): void {
   const workspaceRoot =
@@ -16,60 +24,51 @@ export function activate(context: ExtensionContext): void {
 
     const workspaceRootUris = workspace.workspaceFolders?.map((f) => f.uri.fsPath) ?? [];
 
-    const markdownViewTreeDataProvider = new MarkdownTreeViewDataProvider(
-      workspaceRootUris,
-      configHandler,
-    );
+    const mdtv = new MarkdownTreeView(context, workspaceRootUris, configHandler);
 
+    // const markdownViewTreeDataProvider = new MarkdownTreeViewDataProvider(
+    //   workspaceRootUris,
+    //   configHandler,
+    // );
+    MarkdownTreeViewOutputChannel.Instance.LogLevel = configHandler.configuration.LogLevel.value;
     configHandler.onDidChangeConfiguration(() => {
       if (configHandler.configuration.LogLevel.changed) {
-        MarkdownTreeViewOutputChannel.Instance.logLevel =
+        MarkdownTreeViewOutputChannel.Instance.LogLevel =
           configHandler.configuration.LogLevel.value;
       }
     });
 
-    window.registerTreeDataProvider("markdownTreeView", markdownViewTreeDataProvider);
-
-    commands.registerCommand("markdownTreeView.refreshTree", () => {
-      MarkdownTreeViewOutputChannel.Instance.appendLine("RefreshTree command");
-      markdownViewTreeDataProvider.refresh();
-    });
-    commands.registerCommand("markdownTreeView.collapseNodes", () => {
-      markdownViewTreeDataProvider.Expanded = false;
-      markdownViewTreeDataProvider.refresh();
-    });
-    commands.registerCommand("markdownTreeView.expandNodes", () => {
-      markdownViewTreeDataProvider.Expanded = true;
-      markdownViewTreeDataProvider.refresh();
-    });
-    commands.registerCommand(
-      "markdownTreeView.openTreeViewItem",
-      async (node: MarkdownTreeViewAsyncItem) => {
+    window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        const doc = editor.document;
         MarkdownTreeViewOutputChannel.Instance.appendLine(
-          `OpenTreeViewItem - ${node}`,
+          `Active Editor changed - ${doc.uri}`,
           LogLevel.Debug,
         );
-        await markdownViewTreeDataProvider.openDocument(node);
-      },
-    );
-    commands.registerCommand(
-      "markdownTreeView.refreshTreeItem",
-      async (node: MarkdownTreeViewAsyncItem) => {
-        MarkdownTreeViewOutputChannel.Instance.appendLine(
-          `RefreshTreeItem - ${node}`,
-          LogLevel.Debug,
-        );
-        await node.getItemInformation();
-        markdownViewTreeDataProvider.onViewSelected(node);
-      },
-    );
+        mdtv.reveal(doc.uri);
+      }
+    });
 
     workspace.onDidOpenTextDocument((doc: TextDocument) => {
       MarkdownTreeViewOutputChannel.Instance.appendLine(`Open Document ${doc.uri}`, LogLevel.Debug);
+      mdtv.reveal(doc.uri);
+    });
+
+    workspace.onDidOpenTextDocument((doc: TextDocument) => {
+      MarkdownTreeViewOutputChannel.Instance.appendLine(`Open Document ${doc.uri}`, LogLevel.Debug);
+      mdtv.reveal(doc.uri);
     });
 
     workspace.onDidSaveTextDocument((doc: TextDocument) => {
-      markdownViewTreeDataProvider.saveDocument(doc.uri);
+      mdtv.saveDocument(doc.uri);
     });
+
+    if (window.activeTextEditor?.document) {
+      MarkdownTreeViewOutputChannel.Instance.appendLine(
+        `Reveal active document on activation - ${window.activeTextEditor.document.uri}`,
+        LogLevel.Debug,
+      );
+      mdtv.reveal(window.activeTextEditor.document.uri);
+    }
   }
 }

@@ -1,7 +1,6 @@
-import { Event, EventEmitter, workspace, WorkspaceConfiguration } from "vscode";
+import { Event, EventEmitter, LogLevel, workspace, WorkspaceConfiguration } from "vscode";
 
 import { Configuration } from "./configuration";
-import { LogLevel } from "../types/log-level";
 import { ConfigurationProperty } from "./configuration-property";
 import { IDisposable } from "../interfaces/idisposable";
 

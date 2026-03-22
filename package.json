@@ -2,7 +2,7 @@
   "name": "markdown-treeview",
   "displayName": "Markdown TreeView",
   "description": "A TreeViewer for markdown files using their header title or first H1 as the filename",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "publisher": "Fr43nk",
   "license": "MIT",
   "repository": {
@@ -120,13 +120,12 @@
           "order": 2,
           "title": "Log Level",
           "enumItemLabels": [
-            "None",
-            "Critical",
-            "Error",
-            "Warning",
-            "Information",
+            "Off",
+            "Trace",
             "Debug",
-            "Trace"
+            "Info",
+            "Warning",
+            "Error"
           ],
           "enum": [
             0,
@@ -134,8 +133,7 @@
             2,
             3,
             4,
-            5,
-            6
+            5
           ]
         }
       }
