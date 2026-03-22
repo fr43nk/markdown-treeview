@@ -1,5 +1,9 @@
 # Changes
 
+## Version 1.1.0
+
+- added auto reveal of open file in the markdown tree.
+
 ## Version 1.0.1
 
 - Added media files for marketplace and readme
