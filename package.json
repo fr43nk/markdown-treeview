@@ -154,7 +154,7 @@
     "eslint": "^10.0.3",
     "typescript": "^5.1.3",
     "vitest": "^1.0.0",
-    "vite": "^5.1.0"
+    "vite": "^8.0.3"
   },
   "vitest": {
     "globals": false,
